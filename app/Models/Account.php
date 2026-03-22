@@ -1,0 +1,39 @@
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+class Account extends Authenticatable implements JWTSubject
+{
+    /** @use HasFactory<\Database\Factories\AccountFactory> */
+    use HasFactory;
+    use HasUuids;
+    
+
+    protected $fillable = ['status', 'email', 'password','email_verified_at','blocked_by'];
+    protected $hidden = ['password'];
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'account_roles');
+    }
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
+    public function provider(){
+        return $this->hasOne(Provider::class);
+    }
+  
+}
