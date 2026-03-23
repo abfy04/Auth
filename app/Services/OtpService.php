@@ -2,9 +2,9 @@
 namespace App\Services;
 
 use App\Jobs\SendEmailJob;
-use App\Mail\OtpMail;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
+use App\Exceptions\ServiceException;
 
 class OtpService
 {
@@ -22,14 +22,15 @@ class OtpService
     public function sendOtp(string $email): void
     {
         $this->checkRateLimit($email);
+        // if (Redis::exists("otp:{$email}")) {
+        //     throw new ServiceException('OTP already sent. Try again later.');
+        // }
 
         $otp = $this->generateOtp();
-
         // Store OTP in Redis
         Redis::setex("otp:{$email}", $this->otpExpiry, $otp);
-
         // Queue OTP email
-        SendEmailJob::dispatch($email, new OtpMail($otp));
+        SendEmailJob::dispatch($email,$otp);
     }
 
     // Verify OTP

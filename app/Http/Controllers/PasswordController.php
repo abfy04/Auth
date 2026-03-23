@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Responses\ApiResponses;
+use Illuminate\Foundation\Console\ApiInstallCommand;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -53,16 +55,16 @@ class PasswordController extends Controller
 
         $account= auth()->user();
         if (!$account) {
-            return response()->json(['message' => 'User not found'], 404);
+            return ApiResponses::error('User not found',404);
         }
         
         if (!Hash::check($validatedData['current_password'], $account->password)) {
-            return response()->json(['message' => 'Current password is incorrect'], 400);
+            return ApiResponses::error('Current password is incorrect',400);
         }
 
         $newPassword = $validatedData['new_password'];
         $accountService->changePassword($account, $newPassword);
 
-        return response()->json(['message' => 'Password changed successfully']);
+        return ApiResponses::success('Password changed successfully');
     }
 }

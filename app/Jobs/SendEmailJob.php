@@ -9,28 +9,24 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\WelcomeProviderMail;
+use App\Mail\OtpMail;
 
 class SendEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    public $tries = 1; 
+
     protected $email;
-    protected $mailable;
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(string $email, $mailable)
+    protected $otp;
+
+    public function __construct(string $email, string $otp)
     {
         $this->email = $email;
-        $this->mailable = $mailable;
+        $this->otp = $otp;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        Mail::to($this->email)->send($this->mailable);
-
+        Mail::to($this->email)->send(new OtpMail($this->otp));
     }
 }

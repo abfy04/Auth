@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('business_name')->unique();
             $table->foreignUuid('account_id')->constrained('accounts')->cascadeOnDelete();
-            $table->foreignUuid('approved_by')->constrained('accounts')->cascadeOnDelete();
+            $table->foreignUuid('approved_by')->nullable()->constrained('accounts')->cascadeOnDelete();
             $table->string("city");
             $table->timestamps();
             $table->unique('account_id'); 

@@ -12,13 +12,6 @@ use App\Services\OtpService;
 
 class OptController extends Controller
 {
-    public function sendOtp($email)
-    {
-        $otpService = new OtpService();
-        if($otpService->sendOtp($email)){
-            return response()->json(['message' => 'OTP sent successfully'], 200);
-        }
-    }
 
     public function verifyEmail(VerifyEmailRequest $request,OtpService $otpService, AccountService $accountService)
         {
@@ -44,9 +37,9 @@ class OptController extends Controller
             return response()->json(['message' => 'Email not found'], 404);
         }
 
-        if($otpService->sendOtp($email)){
-            return response()->json(['message' => 'Password reset OTP sent successfully']);
-        }
+        $otpService->sendOtp($email);
+        return response()->json(['message' => 'Password reset OTP sent successfully']);
+        
     }
 
     public function verifyPasswordResetOpt(VerifyEmailRequest $request, OtpService $otpService)
@@ -65,7 +58,7 @@ class OptController extends Controller
     }
 
 
-    public function requestChangeEmail(Request $request)
+    public function requestChangeEmail(Request $request,OtpService $otpService)
     {
         $request->validate(['new_email' => 'required|email']);
         $account = auth()->user();
@@ -78,8 +71,8 @@ class OptController extends Controller
         $account->email_verified_at = null; // Mark email as unverified
         $account->save();
 
-        $this->sendOtp($newEmail); // Send OTP to new email for verification
-
+        $otpService->sendOtp($newEmail); // Send OTP to new email for verification
+        auth()->logout();
         return response()->json(['message' => 'Email change requested. Please verify your new email.']);
     }
 
@@ -96,7 +89,7 @@ class OptController extends Controller
         }
 
         $accountService->verifyEmail($email);
-        auth()->logout();
+        
         return response()->json(['message' => 'Email change verified successfully']);
     }
 }

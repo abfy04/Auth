@@ -1,9 +1,10 @@
 <?php
 namespace App\Http\Responses;
 
-class ApiResponses
+class ApiResponse
+
 {
-    public static function success($data = null, $message = 'Success', $statusCode = 200)
+    public static function success( $message = 'Success', $statusCode = 200,$data = null)
     {
         return response()->json([
             'status' => 'success',

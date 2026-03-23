@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Exceptions\ServiceException;
 use App\Models\Role;
+use App\Http\Resources\UserResource;
 
 
 class UserService
@@ -29,7 +30,7 @@ class UserService
 
             //role assignement
              
-            $role = Role::where('name', 'provider')->first();
+            $role = Role::where('name', 'user')->first();
             if (!$role) {
                 throw new ServiceException('Role not found');
             }
@@ -43,5 +44,12 @@ class UserService
 
             return $user->load('account');
         });
+    }
+
+    public function updateUser($account,$validatedData){
+        $user = $account->user;
+        $user->update($validatedData);
+
+        return  new UserResource($user);
     }
 }

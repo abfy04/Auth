@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AccountResource;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 
 
@@ -11,34 +13,34 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
         if (!$token = auth()->attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return ApiResponse::error('Invalid credentials',401);
         }
         if (! auth()->user()->email_verified_at) {
             auth()->logout();
-            return response()->json(['message' => 'Email not verified. Please verify your email before logging in.'], 403);
+            return ApiResponse::error('Email not verified. Please verify your email before logging in.',403);
         }
 
-        return response()->json(['token' => $token]);
+        return ApiResponse::success('Logged In successully',200,['token' => $token]);
     }
 
     public function profile(Request $request)
     {
         $account = auth()->user();
         if (!$account) {
-            return response()->json(['message' => 'User not found'], 404);
+            return ApiResponse::error('User not found',404) ;
         }
-        $account->load('roles', 'user', 'prvider','admin');
-        return response()->json($account);
+        $account->load('roles', 'user', 'provider');
+        return ApiResponse::success($data=new AccountResource($account));
     }
 
     public function logout(Request $request)
     {
         auth()->logout();
-        return response()->json(['message' => 'Logged out successfully']);
+        return ApiResponse::success('Logged out successfully');
     }
 
     public function refresh(Request $request)
     {
-        return response()->json(['token' => auth()->refresh()]);
+        return ApiResponse::success(['token'=>auth()->refresh()]);
     }
 }

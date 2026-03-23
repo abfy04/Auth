@@ -1,6 +1,7 @@
 <?php 
 namespace App\Services;
 
+use App\Http\Resources\ProviderResource;
 use App\Models\Account;
 use App\Models\Provider;
 use App\Models\Role;
@@ -43,5 +44,11 @@ class ProviderService
             return $provider->load('account');
         });
 
+    }
+
+    public function updateProvider($account,$validatedData){
+         $provider = $account->provider;
+         $provider->update($validatedData);
+         return new ProviderResource($provider);
     }
 }
