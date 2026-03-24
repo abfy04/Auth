@@ -1,9 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Http\Requests\StoreAccountRequest;
 use App\Models\Account;
-use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 class AccountService
 {
@@ -28,9 +26,23 @@ class AccountService
         $account->save();
     }
 
-    public function changeEmail(){
-
+    public function changeEmail($account,$newEmail){
+    
+        $account->email = $newEmail;
+        $account->email_verified_at = null; // Mark email as unverified
+        $account->save();
     }
+    
+    public function requestChangeReset($email){
+        $account = $this->findByEmail($email);
+        if (!$account) {
+            throw new \Exception('Account not found',404);
+        }
+        if ($account->status =="blocked"){
+            throw new \Exception('The account related to this email is blocked',403);
+        }
+    }
+
 
 
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProviderRequest;
-use App\Jobs\SendEmailJob;
 use App\Mail\ProviderApproved;
 use App\Models\Account;
 use App\Services\ProviderService;
@@ -31,12 +30,9 @@ class ProviderController extends Controller
         );
     }
 
-    public function approve(Request $request,$id){
-        $providerAccount = Account::where('id',$id)->first();
-        $providerAccount->update(['status'=>'active']);
-        $provider = $providerAccount->provider;
-        $provider->update(['approver_by'=>auth()->user()->id]);
+    public function approve(Request $request,$id,ProviderService $providerService){
+        $providerService->approve($id);
 
-        SendEmailJob::dispatch(new ProviderApproved($provider->business_name));
+        return ApiResponse::success();
     }
 }

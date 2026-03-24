@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\PasswordRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +25,7 @@ class StoreProviderRequest extends FormRequest
     {
         return [
             'email' => 'required|email|max:255|unique:accounts,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required','confirmed',new PasswordRule()],
             'business_name' => 'required|string|max:255|unique:providers,business_name',
             'city' => 'required|string|max:255',
         ];

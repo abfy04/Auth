@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use Throwable;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use App\Http\Responses\ApiResponses;
+use App\Http\Responses\ApiResponse;
 
 class Handler extends ExceptionHandler
 {
@@ -12,10 +12,13 @@ class Handler extends ExceptionHandler
     {
         // Handle custom service exceptions
         if ($e instanceof ServiceException) {
-            return ApiResponses::error(
+            return ApiResponse::error(
                 $e->getMessage(),
                 $e->getStatus()
             );
+        }
+        if (!config('app.debug')) {
+            return ApiResponse::error('Something went wrong', 500);
         }
 
         return parent::render($request, $e);

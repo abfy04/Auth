@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Responses\ApiResponses;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Foundation\Console\ApiInstallCommand;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,17 +36,17 @@ class PasswordController extends Controller
         $account = $accountService->findByEmail($email);
 
         if (!$account) {
-            return response()->json(['message' => 'Email not found'], 404);
+            return ApiResponse::error('Email not found',404);;
         }
         if (! $otpService->isOtpVerified($email)) {
-            return response()->json(['message' => 'OTP not verified. Please verify OTP before resetting password.'], 400);
+            return ApiResponse::error('OTP not verified. Please verify OTP before resetting password.',400);
         }
 
         $newPassword = $request->input('new_password');
         $accountService->changePassword($account, $newPassword);
         $otpService->clearVerifiedOtp($email); // Clear OTP verification status after password reset
 
-        return response()->json(['message' => 'Password reset successfully']);
+        return ApiResponse::success('Password resent successfuly');
     }
 
     public function changePassword(ChangePasswordRequest $request,AccountService $accountService)
@@ -55,16 +55,16 @@ class PasswordController extends Controller
 
         $account= auth()->user();
         if (!$account) {
-            return ApiResponses::error('User not found',404);
+            return ApiResponse::error('User not found',404);
         }
         
         if (!Hash::check($validatedData['current_password'], $account->password)) {
-            return ApiResponses::error('Current password is incorrect',400);
+            return ApiResponse::error('Current password is incorrect',400);
         }
 
         $newPassword = $validatedData['new_password'];
         $accountService->changePassword($account, $newPassword);
 
-        return ApiResponses::success('Password changed successfully');
+        return ApiResponse::success('Password changed successfully');
     }
 }

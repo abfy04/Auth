@@ -1,10 +1,9 @@
 <?php
 namespace App\Services;
 
-use App\Jobs\SendEmailJob;
+use App\Jobs\SendOTPEmailJob;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
-use App\Exceptions\ServiceException;
 
 class OtpService
 {
@@ -30,7 +29,7 @@ class OtpService
         // Store OTP in Redis
         Redis::setex("otp:{$email}", $this->otpExpiry, $otp);
         // Queue OTP email
-        SendEmailJob::dispatch($email,$otp);
+        SendOTPEmailJob::dispatch($email,$otp);
     }
 
     // Verify OTP

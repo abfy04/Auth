@@ -51,4 +51,22 @@ class ProviderService
          $provider->update($validatedData);
          return new ProviderResource($provider);
     }
+
+    public function approve($id){
+        $providerAccount = Account::where('id',$id)->first();
+        // Prevent duplicate email
+        if (! $providerAccount) {
+                throw new ServiceException('Provider not found ', 404);
+        }
+        if ($providerAccount->status == 'blocked') {
+                throw new ServiceException('This provider is blocked ', 409);
+        }
+        if ($providerAccount->status == 'active') {
+                throw new ServiceException('This provider is already approved ', 409);
+        }
+
+        $providerAccount->update(['status'=>'active']);
+        $provider = $providerAccount->provider;
+        $provider->update(['approved_by'=>auth()->user()->id]);
+    }
 }
