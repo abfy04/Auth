@@ -35,5 +35,16 @@ class Account extends Authenticatable implements JWTSubject
     public function provider(){
         return $this->hasOne(Provider::class);
     }
+
+    public function isProvider(){
+        return $this->roles->pluck('name')->contains('provider');
+    }
+
+    public function isBlocked(){
+        return $this->status == " blocked";
+    }
+    public function isPending(){
+        return $this->status == " pending";
+    }
   
 }

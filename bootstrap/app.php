@@ -16,7 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'checkRole' => App\Http\Middleware\CheckRole::class,]);
+            'checkRole' => App\Http\Middleware\CheckRole::class,
+            'notBlocked' => App\Http\Middleware\NotBlocked::class,
+            'notPending' => App\Http\Middleware\NotPending::class,
+            'approved' => App\Http\Middleware\Approved::class,
+            'verified' => App\Http\Middleware\Verified::class,
+            'active' => App\Http\Middleware\Active::class,
+            'desactive' => App\Http\Middleware\IsDesactive::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

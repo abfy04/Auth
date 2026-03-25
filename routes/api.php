@@ -7,8 +7,13 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\HealthController;
 
 Route::prefix('v1')->group(function(){
+    Route::prefix('health')->group(function(){
+        Route::get('live',[HealthController::class,'alive']);
+        Route::get('ready',[HealthController::class,'ready']);
+    });
     Route::post('login', [AuthController::class, 'login']);
    
     Route::post('users', [RegisterController::class, 'userRegister']);
@@ -20,30 +25,44 @@ Route::prefix('v1')->group(function(){
     Route::post('reset-code/verify', [OtpController::class, 'verifyPasswordResetOpt']);
     Route::post('password/reset', [PasswordController::class, 'resetPassword']);
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api','verified','notBlocked'])->group(function () {
 
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
 
-        Route::get('users/me', [AuthController::class, 'profile']);
-        Route::patch('users/me/password/change', [PasswordController::class, 'changePassword']);
-        Route::patch('users/me/email/change', [OtpController::class, 'requestChangeEmail']);
+        Route::prefix('account')->group(function(){
 
-       
-        // Route::patch('users/me/status', [AccountController::class, 'toggleActivation']);
+            Route::patch('status', [AccountController::class, 'toggleActivation']);
 
-        Route::middleware('checkRole:provider')->group(function(){
-            Route::patch('providers/',[ProviderController::class,'update']);
-        });
-       
-        Route::middleware('checkRole:user|admin')->group(function(){
-            Route::patch('users/me',[UserController::class,'update']);
-        });
+            Route::middleware(['active'])->group(function () {
+                Route::get('/', [AuthController::class, 'profile']);
+                Route::patch('password', [PasswordController::class, 'changePassword']);
+                Route::patch('email', [OtpController::class, 'requestChangeEmail']);
+            });
 
-        Route::middleware('checkRole:admin')->group(function () {       
-            Route::patch('providers/{id}', [ProviderController::class, 'approve']);   
         });
-   
+        Route::middleware(['active'])->group(function () {
+
+            Route::middleware(['checkRole:provider','approved'])->group(function(){
+
+                Route::patch('providers/me',[ProviderController::class,'update']);
+
+            });
+            
+            Route::middleware(['checkRole:user|admin'])->group(function(){
+
+                Route::patch('users/me',[UserController::class,'update']);
+
+            });
+
+            Route::middleware('checkRole:admin')->group(function () {   
+
+                Route::patch('providers/{id}', [ProviderController::class, 'approve']);
+
+                Route::patch('accounts/{id}', [AccountController::class, 'block']);  
+
+            });
+        });   
     });
 });
 
