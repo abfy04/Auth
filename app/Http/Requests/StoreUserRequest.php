@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\BirthdateRule;
 use App\Rules\PasswordRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,7 +28,7 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|email|max:255|unique:accounts,email',
             'password' => ['required','confirmed',new PasswordRule()],
             'name' => 'required|string|max:255',
-            'birthdate' => 'required|date',
+            'birthdate' => ['required','date',new BirthdateRule()],
         ];
     }
 }

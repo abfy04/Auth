@@ -18,7 +18,12 @@ class ProviderResource extends JsonResource
             'id'=>$this->id,
             'business_name'=>$this->business_name,
             'city'=>$this->city,
-            'status' =>$this->account->status,
+            'status' =>$this->status,
+            'account' =>[
+                'status'=>$this->account->status,
+                'email'=>$this->account->email,
+                
+            ],
         ];
     }
 }

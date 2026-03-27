@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\BirthdateRule;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -24,7 +25,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name'=>'sometimes|string|max:255',
-            'birthdate'=>'sometimes|date'
+            'birthdate'=>['sometimes','date',new BirthdateRule()]
         ];
     }
 }

@@ -3,14 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProviderRequest;
-use App\Mail\ProviderApproved;
-use App\Models\Account;
 use App\Services\ProviderService;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 
 class ProviderController extends Controller
 {
+    public function index(Request $request,ProviderService $providerService)
+    {
+        $providers = $providerService->getProviders($request);
+
+        return ApiResponse::success(
+            'fetched successfully',
+            200,
+            $providers
+        );
+    }
+    public function getApprovedProviders(Request $request,ProviderService $providerService)
+    { 
+        $approvedProviders = $providerService->getApprovedProviders($request);
+
+        return ApiResponse::success(
+            'fetched successfully',
+            200,
+            $approvedProviders
+        );
+    }
 
     public function update(UpdateProviderRequest $request,ProviderService $providerService)
     {

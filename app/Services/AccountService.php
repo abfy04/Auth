@@ -11,7 +11,7 @@ class AccountService
     {
         $account  = Account::where('email', $email)->first();
         if(!$account){
-            throw new ServiceException('Account not fount',404);
+            throw new ServiceException('Account not found',404);
         }
         return $account;
     }
@@ -19,7 +19,7 @@ class AccountService
     {
         $account  = Account::where('id',$id)->first();
         if(!$account){
-            throw new ServiceException('Account not fount',404);
+            throw new ServiceException('Account not found',404);
         }
         return $account;
     }
@@ -58,7 +58,7 @@ class AccountService
     public function checkIfBlocked($account){
       
         if ($account->isBlocked()) {
-            throw new ServiceException('Your account is blocked and cannot be activated or deactivated.', 403);
+            throw new ServiceException('Your account is blocked', 403);
         }
         
     }
@@ -72,7 +72,7 @@ class AccountService
     public function active($account)
     {
         $this->checkIfBlocked($account); 
-        $this->checkIfBlocked($account);
+        $this->checkIfPending($account);
 
         // Toggle active/desactivated
         if ($account->status === 'active') {
@@ -86,11 +86,11 @@ class AccountService
     public function desactive($account)
     {
         $this->checkIfBlocked($account); 
-        $this->checkIfBlocked($account);
+        $this->checkIfPending($account);
 
         // Toggle active/desactivated
         if ($account->status === 'desactivated') {
-            throw new ServiceException('This account is desactive active.', 409);
+            throw new ServiceException('This account is already desactivated.', 409);
         }
 
         $account->update(['status'=>'desactivated']);

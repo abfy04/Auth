@@ -16,8 +16,8 @@ class SendOTPEmailJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     public $tries = 1; 
 
-    protected $email;
-    protected $otp;
+    public $email;
+    public $otp;
 
     public function __construct(string $email, string $otp)
     {

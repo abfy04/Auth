@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => App\Http\Middleware\Verified::class,
             'active' => App\Http\Middleware\Active::class,
             'desactive' => App\Http\Middleware\IsDesactive::class,
+            'isSessionValid' => App\Http\Middleware\EnsureSessionIsValid::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

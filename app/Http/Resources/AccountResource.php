@@ -35,7 +35,10 @@ class AccountResource extends JsonResource
                     return [
                         'type' => 'provider',
                         'business_name' => $this->provider->business_name,
-                        'city' => $this->provider->city,
+                        'city' => $this->provider->city,                
+                        'status'=>$this->provider->status,
+
+                        
                     ];
                 }
 

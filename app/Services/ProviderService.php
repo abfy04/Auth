@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Provider;
 use App\Models\Role;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Exceptions\ServiceException;
@@ -24,7 +25,6 @@ class ProviderService
             $account = Account::create([
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
-                'status' => 'pending'
             ]);
 
             //role assignement
@@ -38,7 +38,8 @@ class ProviderService
             // Create user profile
             $provider = $account->provider()->create([
                 'business_name' => $validatedData['business_name'],
-                'city' => $validatedData['business_name'],
+                'city' => $validatedData['city'],
+                'status'=>'pending'
             ]);
 
             return $provider->load('account');
@@ -61,12 +62,65 @@ class ProviderService
         if ($providerAccount->status == 'blocked') {
                 throw new ServiceException('This provider is blocked ', 409);
         }
-        if ($providerAccount->status == 'active') {
+        if ($providerAccount->provider->status == 'approved') {
                 throw new ServiceException('This provider is already approved ', 409);
         }
 
-        $providerAccount->update(['status'=>'active']);
-        $provider = $providerAccount->provider;
-        $provider->update(['approved_by'=>auth()->user()->id]);
+        $providerAccount->provider->update([
+            'status'=>'approved',
+            'approved_by'=>auth()->user()->id,
+            'approved_at'=>now()
+        ]);
+    }
+
+    public function getApprovedProviders($request){
+        $perPage = min($request->input('per_page', 10), 50);
+        $cacheKey = 'pprovedProviders:' . http_build_query($request->all());
+        return Cache::remember($cacheKey,now()->addMinutes(10),function() use($request,$perPage){
+             $query = Provider::query()
+             ->where('status','apprved')
+             ->whereHas('account', function ($q) {
+                    $q->where('status', 'active'); // approved providers
+            });
+
+            // Filter by city
+            if ($request->filled('city')) {
+                $query->where('city', 'like', '%' . $request->city . '%');
+            }
+
+            // Pagination
+            $providers = $query->paginate($perPage);
+
+            return ProviderResource::collection($providers);
+
+        });
+       
+    }
+    public function getProviders($request){
+        
+        $perPage = min($request->input('per_page', 10), 50);
+        $cacheKey = 'providers:' . http_build_query($request->all());
+        
+        return Cache::remember($cacheKey,now()->addMinutes(10),function()use($request,$perPage){
+            $query = Provider::query()->with('account');
+             // 🔹 Filter by status
+            if ($request->filled('status')) {
+                $query->whereHas('account', function ($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
+            }
+
+            // 🔹 Filter by city
+            if ($request->filled('city')) {
+                $query->where('city', 'like', '%' . $request->city . '%');
+            }
+
+        
+
+            return ProviderResource::collection(
+                $query->paginate($perPage)
+            );
+        });
+       
     }
 }

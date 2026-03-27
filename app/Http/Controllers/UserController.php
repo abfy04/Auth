@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Responses\ApiResponse;
 use App\Services\UserService;
+use Illuminate\Http\Request;
+
 
 class UserController extends Controller
 {
@@ -25,5 +27,17 @@ class UserController extends Controller
             $user
         );
           
+    }
+
+     public function index(Request $request,UserService $userService)
+    {
+        $users = $userService->getUsers($request);
+
+        return ApiResponse::success(
+            'fetched successfully',
+            200,
+            $users
+        );
+
     }
 }

@@ -12,11 +12,19 @@ class Provider extends Model
     use HasFactory;
     use HasUuids;
 
-    protected $fillable = ['business_name', 'account_id', 'city','approved_by'];
+    protected $fillable = [
+        'business_name', 
+        'account_id', 
+        'city',
+        'approved_by',
+        'status',
+        'approved_at'
+    ];
 
     public function account()
     {
         return $this->belongsTo(Account::class);
     }
+    
 
 }

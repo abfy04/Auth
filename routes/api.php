@@ -25,9 +25,10 @@ Route::prefix('v1')->group(function(){
     Route::post('reset-code/verify', [OtpController::class, 'verifyPasswordResetOpt']);
     Route::post('password/reset', [PasswordController::class, 'resetPassword']);
 
-    Route::middleware(['auth:api','verified','notBlocked'])->group(function () {
+    Route::middleware(['auth:api','verified','notBlocked','isSessionValid'])->group(function () {
 
         Route::post('logout', [AuthController::class, 'logout']);
+        Route::post('logout/all', [AuthController::class, 'logoutAll']);
         Route::post('refresh', [AuthController::class, 'refresh']);
 
         Route::prefix('account')->group(function(){
@@ -54,10 +55,17 @@ Route::prefix('v1')->group(function(){
                 Route::patch('users/me',[UserController::class,'update']);
 
             });
+            Route::middleware(['checkRole:user'])->group(function(){
+
+                Route::patch('providers/approved',[ProviderController::class,'getApprovedProviders']);
+
+            });
 
             Route::middleware('checkRole:admin')->group(function () {   
 
                 Route::patch('providers/{id}', [ProviderController::class, 'approve']);
+                Route::get('providers/', [ProviderController::class, 'index']);
+                Route::get('users/', [UserController::class, 'index']);
 
                 Route::patch('accounts/{id}', [AccountController::class, 'block']);  
 

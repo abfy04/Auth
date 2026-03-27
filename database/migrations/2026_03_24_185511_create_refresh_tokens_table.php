@@ -13,14 +13,32 @@ return new class extends Migration
     {
         Schema::create('refresh_tokens', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('account_id')->constrained('accounts')->cascadeOnDelete();
-            $table->string('token')->unique();
+
+            $table->foreignUuid('account_id')
+                ->constrained('accounts')
+                ->cascadeOnDelete();
+
+            $table->foreignUuid('session_id')
+                ->constrained('sessions')
+                ->cascadeOnDelete();
+
+            $table->string('token_hash')->unique();
+
             $table->boolean('revoked')->default(false);
-            $table->string('device')->nullable();
+
+            $table->text('user_agent')->nullable();
             $table->ipAddress('ip')->nullable();
+
             $table->timestamp('expires_at');
             $table->timestamp('last_used_at')->nullable();
+
             $table->timestamps();
+
+            // Indexes
+            $table->index(['account_id', 'session_id']);
+            $table->index('session_id');
+            $table->index('expires_at');
+            $table->index('revoked');
         });
     }
 

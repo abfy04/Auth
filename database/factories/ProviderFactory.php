@@ -17,8 +17,9 @@ class ProviderFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            //
+        return [ 
+        'business_name' => $this->faker->company(),
+        'city' => $this->faker->city()
         ];
     }
 }

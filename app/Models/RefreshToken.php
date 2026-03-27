@@ -18,7 +18,8 @@ class RefreshToken extends Model
         'account_id',
         'token',
         'revoked',
-        'device',
+        'user_agent',
+        'session_id',
         'ip',
         'expires_at',
         'last_used_at',
@@ -36,22 +37,32 @@ class RefreshToken extends Model
         return $this->belongsTo(Account::class);
     }
 
+    public function session(){
+        return $this->belongsTo(Session::class);
+    }
     // Generate a new token string (hashed for DB)
-    public static function generateForAccount($accountId, $device = null, $ip = null, int $ttlMinutes = 43200) // 30 days default
+    public static function generateForSession(
+        $accountId,
+        $sessionId, 
+        $user_agent = null, 
+        $ip = null, 
+        int $ttlMinutes = 43200
+    ) // 30 days default
     {
         $rawToken = Str::random(64); // send raw token to client
         $hashedToken = Hash::make($rawToken);
 
         $refreshToken = self::create([
             'account_id' => $accountId,
+            'session_id' => $sessionId,
             'token' => $hashedToken,
             'revoked' => false,
-            'device' => $device,
+            'user_agent' => $user_agent,
             'ip' => $ip,
             'expires_at' => Carbon::now()->addMinutes($ttlMinutes),
         ]);
 
-        return [$refreshToken, $rawToken]; // store hashed in DB, send raw to client
+        return  $rawToken; // store hashed in DB, send raw to client
     }
 
     // Verify token

@@ -15,13 +15,17 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('status', ['active', 'pending', 'blocked','desactivated'])->default('pending');
-            $table->timestamp('email_verified_at')->nullable()->default(null);
+            $table->enum('status', ['active','blocked','inactive'])->default('active');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('email_changed_at')->nullable();
             $table->timestamps();
+            $table->timestamp('blocked_at')->nullable();
+            $table->string('block_reason')->nullable();
+            $table->index('status');
         });
         Schema::table('accounts', function (Blueprint $table) {
             $table->foreignUuid('blocked_by')->nullable()->constrained('accounts')->nullOnDelete();
-            $table->index('status');
+          
         });
     }
 

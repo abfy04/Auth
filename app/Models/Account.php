@@ -12,7 +12,16 @@ class Account extends Authenticatable implements JWTSubject
     use HasUuids;
     
 
-    protected $fillable = ['status', 'email', 'password','email_verified_at','blocked_by'];
+    protected $fillable = [
+        'status', 
+        'email', 
+        'password',
+        'email_verified_at',
+        'blocked_by',
+        'block_reason',
+        'email_changed_at',
+        'blocked_at'
+    ];
     protected $hidden = ['password'];
 
     public function getJWTIdentifier()
@@ -41,10 +50,18 @@ class Account extends Authenticatable implements JWTSubject
     }
 
     public function isBlocked(){
-        return $this->status == " blocked";
+        return $this->status === "blocked";
     }
-    public function isPending(){
-        return $this->status == " pending";
+    public function isVerified(){
+        return $this->email_verified_at;
+    }
+
+    public function sessions(){
+        return $this->hasMany(Session::class);
+    }
+
+    public function refresh_tokens(){
+        return $this->hasMany(RefreshToken::class);
     }
   
 }

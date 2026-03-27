@@ -18,7 +18,7 @@ class NotPending
     {
         $user = $request->user();
 
-        if ($user && $user->isProvider() && $user->isPending()) {
+        if ($user && $user->isProvider() && $user->provider->status==='pending') {
             throw new ServiceException('Pending providers cannot perform this action.', 403);
         }
         return $next($request);

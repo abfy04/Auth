@@ -18,7 +18,7 @@ class Approved
     {
         $user = $request->user();
 
-        if ($user && $user->isProvider() && $user->status !== 'active') {
+        if ($user && $user->isProvider() && $user->provider->status == 'pending') {
             throw new ServiceException('Provider must be approved.', 403);
         }
         return $next($request);

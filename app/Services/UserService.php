@@ -3,12 +3,14 @@ namespace App\Services;
 
 use App\Models\Account;
 
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Exceptions\ServiceException;
 use App\Models\Role;
 use App\Http\Resources\UserResource;
-
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class UserService
 {
@@ -51,5 +53,53 @@ class UserService
         $user->update($validatedData);
 
         return  new UserResource($user);
+    }
+
+    public function getUsers($request){
+        $perPage = min($request->input('per_page', 10), 50);
+        $cacheKey = 'users:' . http_build_query($request->all());
+        
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($request, $perPage) {
+
+            $query = User::query()->with('account');
+
+            // 🔹 Filter by city
+            $query->when($request->filled('city'), function ($q) use ($request) {
+                $q->where('city', 'like', '%' . $request->city . '%');
+            });
+
+            // 🔹 Filter by age range
+            $query->when(
+                $request->filled('min_age') || $request->filled('max_age'),
+                function ($q) use ($request) {
+
+                    $q->where(function ($q2) use ($request) {
+
+                        if ($request->filled('min_age')) {
+                            $q2->where(
+                                'birthdate',
+                                '<=',
+                                Carbon::now()->subYears($request->min_age)
+                            );
+                        }
+
+                        if ($request->filled('max_age')) {
+                            $q2->where(
+                                'birthdate',
+                                '>=',
+                                Carbon::now()->subYears($request->max_age)
+                            );
+                        }
+
+                    });
+                }
+            );
+
+            return UserResource::collection(
+                $query->paginate($perPage)
+            );
+        });
+
+    
     }
 }
