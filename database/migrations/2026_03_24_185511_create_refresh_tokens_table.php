@@ -38,7 +38,10 @@ return new class extends Migration
             $table->index(['account_id', 'session_id']);
             $table->index('session_id');
             $table->index('expires_at');
-            $table->index('revoked');
+            $table->index('revoked');            
+            $table->index('last_used_at');
+
+
         });
     }
 

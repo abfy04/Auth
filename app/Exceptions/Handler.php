@@ -17,6 +17,12 @@ class Handler extends ExceptionHandler
                 $e->getStatus()
             );
         }
+         if ($e instanceof ThrottleRequestsException) {
+            return ApiResponse::error([
+                    'Too many requests. Please try again later.',
+                    429,
+            ]);
+        }
         if (!config('app.debug')) {
             return ApiResponse::error('Something went wrong', 500);
         }

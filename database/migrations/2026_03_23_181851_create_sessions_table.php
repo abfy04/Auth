@@ -28,6 +28,7 @@ return new class extends Migration
 
             $table->index('account_id');
             $table->index(['account_id','revoked_at']);
+            $table->index('revoked_at');
         });
     }
 

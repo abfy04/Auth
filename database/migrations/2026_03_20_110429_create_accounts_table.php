@@ -22,6 +22,8 @@ return new class extends Migration
             $table->timestamp('blocked_at')->nullable();
             $table->string('block_reason')->nullable();
             $table->index('status');
+            $table->index('email_verified_at');
+            $table->index('blocked_at');
         });
         Schema::table('accounts', function (Blueprint $table) {
             $table->foreignUuid('blocked_by')->nullable()->constrained('accounts')->nullOnDelete();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 use App\Http\Requests\VerifyEmailRequest;
@@ -58,16 +59,15 @@ class OtpController extends Controller
     public function requestChangeEmail(Request $request,OtpService $otpService,AccountService $accountService)
     {
         $request->validate(['new_email' => 'required|email']);
+        
         $account = auth()->user();
-        if (!$account) {
-            return ApiResponse::error('User not found',404);
-        }
-
         $newEmail = $request->input('new_email');
+
         $accountService->changeEmail($account,$newEmail);
 
         $otpService->sendOtp($newEmail); // Send OTP to new email for verification
         auth()->logout();
+
         return ApiResponse::success('Email change requested. Please verify your new email.');
       
     }

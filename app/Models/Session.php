@@ -22,4 +22,23 @@ class Session extends Model
      public function refresh_tokens(){
         return $this->hasMany(RefreshToken::class);
     }
+ 
+
+    public function revoke(){
+         if ($this->revoked_at) {
+            return;
+        }
+
+        $this->update([
+            'revoked_at' => now(),
+        ]);
+
+        $this->refresh_tokens()->update([
+            'revoked' => true,
+        ]);
+    }
+
+    
+
+ 
 }

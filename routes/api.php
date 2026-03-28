@@ -10,20 +10,28 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\HealthController;
 
 Route::prefix('v1')->group(function(){
+
     Route::prefix('health')->group(function(){
         Route::get('live',[HealthController::class,'alive']);
         Route::get('ready',[HealthController::class,'ready']);
     });
-    Route::post('login', [AuthController::class, 'login']);
-   
-    Route::post('users', [RegisterController::class, 'userRegister']);
-    Route::post('providers', [RegisterController::class, 'providerRegister']);
+
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+
+    Route::middleware('throttle:verify')->group(function(){
+
+        Route::post('email/verify', [OtpController::class, 'verifyEmail']);
+            //forget password routes
+        Route::post('password/forget', [OtpController::class, 'requestPasswordReset']);
+        Route::post('reset-code/verify', [OtpController::class, 'verifyPasswordResetOpt']);
+        Route::post('password/reset', [PasswordController::class, 'resetPassword']);
     
-    Route::post('email/verify', [OtpController::class, 'verifyEmail']);
-        //forget password routes
-    Route::post('password/forget', [OtpController::class, 'requestPasswordReset']);
-    Route::post('reset-code/verify', [OtpController::class, 'verifyPasswordResetOpt']);
-    Route::post('password/reset', [PasswordController::class, 'resetPassword']);
+        Route::post('users', [RegisterController::class, 'userRegister']);
+        Route::post('providers', [RegisterController::class, 'providerRegister']);
+    });
+  
+    
+
 
     Route::middleware(['auth:api','verified','notBlocked','isSessionValid'])->group(function () {
 
@@ -33,12 +41,17 @@ Route::prefix('v1')->group(function(){
 
         Route::prefix('account')->group(function(){
 
-            Route::patch('status', [AccountController::class, 'toggleActivation']);
+            Route::patch('status', [AccountController::class, 'toggleActivation'])->middleware('throttle:status');
 
             Route::middleware(['active'])->group(function () {
-                Route::get('/', [AuthController::class, 'profile']);
-                Route::patch('password', [PasswordController::class, 'changePassword']);
-                Route::patch('email', [OtpController::class, 'requestChangeEmail']);
+
+                Route::get('/', [AuthController::class, 'profile'])->middleware('throttle:profile');
+
+                Route::middleware('throttle:change-sensitive-info')->group(function(){
+                    Route::patch('password', [PasswordController::class, 'changePassword']);
+                    Route::patch('email', [OtpController::class, 'requestChangeEmail']);
+                });
+               
             });
 
         });
@@ -46,13 +59,13 @@ Route::prefix('v1')->group(function(){
 
             Route::middleware(['checkRole:provider','approved'])->group(function(){
 
-                Route::patch('providers/me',[ProviderController::class,'update']);
+                Route::patch('providers/me',[ProviderController::class,'update'])->middleware('throttle:change-info');
 
             });
             
             Route::middleware(['checkRole:user|admin'])->group(function(){
 
-                Route::patch('users/me',[UserController::class,'update']);
+                Route::patch('users/me',[UserController::class,'update'])->middleware('throttle:change-info');
 
             });
             Route::middleware(['checkRole:user'])->group(function(){

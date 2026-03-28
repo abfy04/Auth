@@ -2,9 +2,12 @@
 namespace App\Services;
 
 use App\Http\Resources\ProviderResource;
+use App\Jobs\SendEmailJob;
+use App\Mail\YouAreApprovedMail;
 use App\Models\Account;
 use App\Models\Provider;
 use App\Models\Role;
+use App\Mail\YouAreRejected;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -53,24 +56,46 @@ class ProviderService
          return new ProviderResource($provider);
     }
 
-    public function approve($id){
+
+    public function updateStatus($id,$status){
         $providerAccount = Account::where('id',$id)->first();
         // Prevent duplicate email
-        if (! $providerAccount) {
-                throw new ServiceException('Provider not found ', 404);
-        }
-        if ($providerAccount->status == 'blocked') {
-                throw new ServiceException('This provider is blocked ', 409);
-        }
-        if ($providerAccount->provider->status == 'approved') {
-                throw new ServiceException('This provider is already approved ', 409);
-        }
+        $this->isProviderValid($providerAccount,$status);
 
         $providerAccount->provider->update([
-            'status'=>'approved',
-            'approved_by'=>auth()->user()->id,
-            'approved_at'=>now()
+            'status'=>$status,
+            'approved_by'=>$status == 'approved'? auth()->user()->id : null,
+            'approved_at'=>$status == 'approved'? now() : null
         ]);
+        $this->sendEmailBasedOnStatus($status,$$providerAccount->provider,$providerAccount->email);
+    }
+       public function sendEmailBasedOnStatus($status,$provider,$email){
+        if($status =='approved'){
+                SendEmailJob::dispatch(
+                    new YouAreApprovedMail($provider->business_name),
+                    $email
+                );
+            return ;
+        }
+        if($status =='rejected'){
+                SendEmailJob::dispatch(
+                    new YouAreRejected($provider->business_name),
+                    $email
+                );
+            return ;
+        }
+    }
+    public function isProviderValid($providerAccount,$status){
+        // Prevent duplicate email
+        if (! $providerAccount) {
+            throw new ServiceException('Provider not found ', 404);
+        }
+        if ($providerAccount->status == 'blocked') {
+            throw new ServiceException('This provider is blocked ', 409);
+        }
+        if ($providerAccount->provider->status == $status) {
+            throw new ServiceException("This provider is already {$status} ", 409);
+        }
     }
 
     public function getApprovedProviders($request){
@@ -123,4 +148,6 @@ class ProviderService
         });
        
     }
+
+ 
 }

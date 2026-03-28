@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
@@ -62,6 +63,19 @@ class Account extends Authenticatable implements JWTSubject
 
     public function refresh_tokens(){
         return $this->hasMany(RefreshToken::class);
+    }
+
+    public function revokeAllSessions(): void
+    {
+        $this->sessions()
+            ->whereNull('revoked_at')
+            ->get()
+            ->each
+            ->revoke();
+    }
+
+    public function emailChangedRecently(){
+        return $this->email_changed_at && $this->email_changed_at < Carbon::now()->subDays(14);
     }
   
 }

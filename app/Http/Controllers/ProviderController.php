@@ -48,9 +48,13 @@ class ProviderController extends Controller
         );
     }
 
-    public function approve(Request $request,$id,ProviderService $providerService){
-        $providerService->approve($id);
 
-        return ApiResponse::success();
+    public function updateStatus(Request $request,$id,ProviderService $providerService){
+        $validated = $request->validate(['status'=>"required|string|in:approved,rejected"]);
+        $status = $validated['status'];
+        $providerService->updateStatus($id,$status);
+        
+        return ApiResponse::success("Provider is {$status} successfuly");
+
     }
 }

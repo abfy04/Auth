@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Mail;
 
 
 class HealthController extends Controller
@@ -51,6 +52,10 @@ class HealthController extends Controller
             $services['queue'] = 'down';
             $statusCode = 503;
         }
+
+        // if ($statusCode !== 200){
+        //     Mail::to('fikryayoub24@gmail.com')->send(new YouAreApprovedMail($businessName));
+        // }
 
         return response()->json([
             'status' => $statusCode === 200 ? 'ready' : 'not_ready',

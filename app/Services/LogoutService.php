@@ -43,11 +43,44 @@ class LogoutService
         // 5. Invalidate JWT
         auth()->logout();
 
+        $this->audit($account,'logout','User logged out (current session)',$userAgent,$ip);
         // 6. Audit
+    }
+
+ 
+
+    public function logoutAll($userAgent, $ip)
+    {
+        $account = auth()->user();
+
+        $redisKey = $this->redisKey($account->id);
+
+        // 1. Get all sessions from Redis
+        $sessions = Redis::zrange($redisKey, 0, -1);
+
+        // 2. Revoke all in DB
+        Session::where('account_id', $account->id)->update([
+            'revoked_at' => now()
+        ]);
+
+        RefreshToken::where('account_id', $account->id)->update([
+            'revoked' => true
+        ]);
+
+        // 3. Clear Redis بالكامل
+        Redis::del($redisKey);
+
+        // 4. Logout current JWT
+        auth()->logout();
+
+        $this->audit($account,'logout_all','User logged out from all sessions',$userAgent,$ip);
+    }
+
+    private function audit($account , $action,$desc,$userAgent,$ip){
         Audit::log(
             $account->id,
-            'logout',
-            'User logged out (current session)',
+            $action,
+            $desc,
             null,
             true,
             null,
@@ -55,45 +88,8 @@ class LogoutService
             $ip
         );
     }
-
-    private function redisKey($accountId)
+   private function redisKey($accountId)
     {
         return "user_sessions:{$accountId}";
     }
-
-    public function logoutAll($userAgent, $ip)
-{
-    $account = auth()->user();
-
-    $redisKey = $this->redisKey($account->id);
-
-    // 1. Get all sessions from Redis
-    $sessions = Redis::zrange($redisKey, 0, -1);
-
-    // 2. Revoke all in DB
-    Session::where('account_id', $account->id)->update([
-        'revoked_at' => now()
-    ]);
-
-    RefreshToken::where('account_id', $account->id)->update([
-        'revoked' => true
-    ]);
-
-    // 3. Clear Redis بالكامل
-    Redis::del($redisKey);
-
-    // 4. Logout current JWT
-    auth()->logout();
-
-    Audit::log(
-        $account->id,
-        'logout_all',
-        'User logged out from all sessions',
-        null,
-        true,
-        null,
-        $userAgent,
-        $ip
-    );
-}
 }

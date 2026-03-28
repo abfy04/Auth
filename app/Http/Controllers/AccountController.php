@@ -14,29 +14,14 @@ class AccountController extends Controller
     }
 
     public function block(Request $request , $id){
+        $reason = $request->validate(['reason'=>"required|string|min:3"]);
         $admin = auth()->user();
-        $this->accountService->blockAccount($id);
+        $this->accountService->blockAccount($id,$reason);
 
         return ApiResponse::success('User is blocked successfully',200);   
         
     }
 
-    public function active($account)
-    {
-        $this->accountService->active($account);
-
-        // Fallback for unexpected statuses
-        return ApiResponse::success('Status changed successfuly', 200);
-    }
-
-     public function desactive($account)
-    {
-        
-        $this->accountService->desactive($account);
-
-        // Fallback for unexpected statuses
-        return ApiResponse::success('Status changed successfuly', 200);
-    } 
     
     public function toggleActivation(Request $request){
         $status = $request->validate(['status'=>'required|string|in:active,desactive']);
@@ -45,8 +30,11 @@ class AccountController extends Controller
              return ApiResponse::error('Account Not Found', 404);
         }
         if ($status === 'active') {
-            $this->active($account);
+            $this->accountService->toggleAccountStatus($account,'active');
+            return ApiResponse::success('Account is active now ', 200);
+            
         }
-        $this->desactive($account);
+        $this->accountService->toggleAccountStatus($account,'inactive');
+        return ApiResponse::success('Account is inactive now', 200);
     }
 }

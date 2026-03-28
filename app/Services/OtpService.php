@@ -1,7 +1,9 @@
 <?php
 namespace App\Services;
 
-use App\Jobs\SendOTPEmailJob;
+use App\Jobs\SendEmailJob;
+use App\Mail\OtpMail;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 
@@ -12,7 +14,7 @@ class OtpService
     protected int $rateLimitWindow = 3600; // 1 hour
 
     // Generate a 6-digit OTP
-    public function generateOtp(): int
+    public function generateOtp(): string
     {
         return rand(100000, 999999);
     }
@@ -21,15 +23,12 @@ class OtpService
     public function sendOtp(string $email): void
     {
         $this->checkRateLimit($email);
-        // if (Redis::exists("otp:{$email}")) {
-        //     throw new ServiceException('OTP already sent. Try again later.');
-        // }
 
         $otp = $this->generateOtp();
         // Store OTP in Redis
-        Redis::setex("otp:{$email}", $this->otpExpiry, $otp);
+        Redis::setex("otp:{$email}", $this->otpExpiry, Hash::make($otp));
         // Queue OTP email
-        SendOTPEmailJob::dispatch($email,$otp);
+        SendEmailJob::dispatch(new OtpMail($otp),$email);
     }
 
     // Verify OTP
@@ -43,7 +42,7 @@ class OtpService
             throw ValidationException::withMessages(['otp' => 'OTP expired or not found']);
         }
 
-        if ($otp != $storedOtp) {
+        if (Hash::check($otp ,$storedOtp)) {
             throw ValidationException::withMessages(['otp' => 'Invalid OTP']);
         }
 

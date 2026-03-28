@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\SendEmailJob;
+use App\Mail\YouAreLoggedIn;
 use App\Models\RefreshToken;
 use App\Exceptions\ServiceException;
 use App\Models\Audit;
@@ -31,6 +33,9 @@ class LoginService
             $refreshToken = $this->createRefreshToken($account, $session, $userAgent, $ip);
 
             $this->audit($account, $userAgent, $ip);
+
+            $this->sendEmail($account,$userAgent,$ip);
+          
 
             return [
                 'access_token' => $accessToken,
@@ -125,5 +130,11 @@ class LoginService
     private function redisKey($accountId)
     {
         return "user_sessions:{$accountId}";
+    }
+
+    private function sendEmail($account,$userAgent,$ip){
+          SendEmailJob::dispatch(new YouAreLoggedIn(
+                now(),$ip , $userAgent
+            ),$account->email);
     }
 }
